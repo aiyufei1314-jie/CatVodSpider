@@ -19,6 +19,26 @@ public class Sub {
         return new Sub();
     }
 
+    public String getUrl() {
+        return url;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public int getFlag() {
+        return flag;
+    }
+
     public Sub name(String name) {
         this.name = name;
         return this;

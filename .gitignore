@@ -1,13 +1,19 @@
+*.log
 *.iml
-.gradle
-/local.properties
-.idea
-.DS_Store
-/build
-*build
-/captures
-.externalNativeBuild
+
 .cxx
+.DS_Store
+.externalNativeBuild
+
+/.idea
+/.kotlin
+/.gradle
+
+/build
+/captures
+
+Thumbs.db
 local.properties
+lint-baseline.xml
 
 geoisam.*

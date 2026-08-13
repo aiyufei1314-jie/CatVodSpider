@@ -15,10 +15,29 @@ public class Filter {
     @SerializedName("value")
     private List<Value> value;
 
+    public Filter() {
+    }
+
     public Filter(String key, String name, List<Value> value) {
         this.key = key;
         this.name = name;
         this.value = value;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getInit() {
+        return init;
+    }
+
+    public List<Value> getValue() {
+        return value;
     }
 
     public static class Value {
@@ -28,6 +47,9 @@ public class Filter {
         @SerializedName("v")
         private String v;
 
+        public Value() {
+        }
+
         public Value(String value) {
             this.n = value;
             this.v = value;
@@ -36,6 +58,14 @@ public class Filter {
         public Value(String n, String v) {
             this.n = n;
             this.v = v;
+        }
+
+        public String getN() {
+            return n;
+        }
+
+        public String getV() {
+            return v;
         }
     }
 }

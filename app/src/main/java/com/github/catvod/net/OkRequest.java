@@ -2,17 +2,12 @@ package com.github.catvod.net;
 
 import android.text.TextUtils;
 
-import com.github.catvod.utils.Util;
+import com.github.catvod.utils.BaseUtil;
 
 import java.io.IOException;
 import java.util.Map;
 
-import okhttp3.FormBody;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 
 class OkRequest {
 
@@ -60,12 +55,11 @@ class OkRequest {
     private void setParams() {
         url = url + "?";
         for (String key : params.keySet()) url = url.concat(key + "=" + params.get(key) + "&");
-        url = Util.substring(url);
+        url = BaseUtil.substring(url);
     }
 
     public OkResult execute(OkHttpClient client) {
-        try {
-            Response response = client.newCall(request).execute();
+        try (Response response = client.newCall(request).execute()) {
             return new OkResult(response.code(), response.body().string(), response.headers().toMultimap());
         } catch (IOException e) {
             return new OkResult();

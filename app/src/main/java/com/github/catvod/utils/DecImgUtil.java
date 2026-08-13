@@ -12,7 +12,6 @@ public class DecImgUtil {
     private static final String DEFAULT_KEY = "f5d965df75336270";
     private static final String DEFAULT_IV = "97b60394abc2fbe1";
 
-
     public static String loadBackgroundImage(String bgUrl, String key, String iv, boolean noPadding) {
         if (bgUrl == null || bgUrl.isEmpty()) return "";
 
@@ -22,7 +21,7 @@ public class DecImgUtil {
         Request request = new Request.Builder().url(bgUrl).build();
         try (Response response = OkHttp.newCall(request)) {
             if (!response.isSuccessful()) {
-                return "";
+                return BaseUtil.ALIVIDEO;
             }
             byte[] imageBytes = response.body().bytes();
             String base64Str = CryptoUtil.bytesToBase64(imageBytes);
@@ -33,11 +32,11 @@ public class DecImgUtil {
                 return "data:image/" + ext + ";base64," + decryptedStr;
             }
         } catch (IOException e) {
-            return PublicData.ALIVIDEO;
+            return BaseUtil.ALIVIDEO;
         } catch (Exception e) {
-            return PublicData.ALIVIDEO;
+            return BaseUtil.ALIVIDEO;
         }
-        return PublicData.ALIVIDEO;
+        return BaseUtil.ALIVIDEO;
     }
 
     public static String loadBackgroundImage(String bgUrl) {

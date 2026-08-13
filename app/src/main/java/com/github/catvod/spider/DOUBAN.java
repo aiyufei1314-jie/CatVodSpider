@@ -1,7 +1,5 @@
 package com.github.catvod.spider;
 
-import static com.github.catvod.utils.PublicData.*;
-
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -11,12 +9,11 @@ import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.DouBanData;
-import com.github.catvod.utils.Util;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.github.catvod.utils.BaseUtil;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
+import java.io.StringReader;
 import java.net.URLEncoder;
 import java.util.*;
 
@@ -38,49 +35,29 @@ public class DOUBAN extends Spider {
 
     @Override
     public void init(Context context, String extend) throws Exception {
-        JsonObject fullConfig = new JsonObject();
-
-        fullConfig.add("movie", arrayOf(
-                DouBanData.MOVIE_TYPE,
-                DouBanData.MOVIE_AREA,
-                DouBanData.COMMON_YEAR,
-                DouBanData.COMMON_SORT
-        ));
-
-        fullConfig.add("tv", arrayOf(
-                DouBanData.TV_TYPE,
-                DouBanData.TV_AREA,
-                DouBanData.TV_FORM,
-                DouBanData.COMMON_YEAR,
-                DouBanData.COMMON_SORT
-        ));
-
-        fullConfig.add("show", arrayOf(
-                DouBanData.SHOW_TYPE,
-                DouBanData.TV_AREA,
-                DouBanData.TV_FORM,
-                DouBanData.COMMON_YEAR,
-                DouBanData.COMMON_SORT
-        ));
-
-        fullConfig.add("anime", fullConfig.getAsJsonArray("movie"));
-        fullConfig.add("documentary", fullConfig.getAsJsonArray("movie"));
-        fullConfig.add("short", fullConfig.getAsJsonArray("movie"));
-        fullConfig.add("comic", fullConfig.getAsJsonArray("tv"));
-
-        fullConfig.add("obscure", arrayOf(
-                DouBanData.OBSCURE_AREA
-        ));
-
-        this.extend = fullConfig.toString();
+        this.extend = buildConfig();
     }
 
-    private JsonArray arrayOf(JsonObject... items) {
-        JsonArray arr = new JsonArray();
-        for (JsonObject item : items) {
-            arr.add(item);
-        }
-        return arr;
+    private String buildConfig() {
+        String movie = arrayOf(DouBanData.MOVIE_TYPE, DouBanData.MOVIE_AREA, DouBanData.COMMON_YEAR, DouBanData.COMMON_SORT);
+        String tv = arrayOf(DouBanData.TV_TYPE, DouBanData.TV_AREA, DouBanData.TV_FORM, DouBanData.COMMON_YEAR, DouBanData.COMMON_SORT);
+        String show = arrayOf(DouBanData.SHOW_TYPE, DouBanData.TV_AREA, DouBanData.TV_FORM, DouBanData.COMMON_YEAR, DouBanData.COMMON_SORT);
+        String obscure = arrayOf(DouBanData.OBSCURE_AREA);
+        return "{"
+                + "\"movie\":" + movie + ","
+                + "\"tv\":" + tv + ","
+                + "\"show\":" + show + ","
+                + "\"anime\":" + movie + ","
+                + "\"documentary\":" + movie + ","
+                + "\"short\":" + movie + ","
+                + "\"comic\":" + tv + ","
+                + "\"obscure\":" + obscure + ","
+                + "\"rating\":" + obscure
+                + "}";
+    }
+
+    private String arrayOf(String... items) {
+        return "[" + String.join(",", items) + "]";
     }
 
     @Override
@@ -95,17 +72,15 @@ public class DOUBAN extends Spider {
                 {"documentary", "纪录片"},
                 {"show", "综艺"},
                 {"short", "短片"},
-                {"obscure", "冷门佳片"},
-                {"TOP250", "豆瓣TOP250"}
+                {"rating", "豆瓣高分"},
+                {"obscure", "冷门佳片"}
         };
         for (String[] pair : typePairs) {
             classes.add(new Class(pair[0], pair[1]));
         }
 
         String recommendUrl = siteUrl + "/movie/suggestion" + apikey + "&start=0&count=48&new_struct=1&with_review=1";
-        JsonObject jsonObject = JsonParser.parseString(OkHttp.string(recommendUrl, getHeader())).getAsJsonObject();
-        JsonArray items = jsonObject.getAsJsonArray("items");
-        return Result.string(classes, parseVodListFromJsonArray(items), JsonParser.parseString(extend));
+        return Result.string(classes, parseVods(OkHttp.string(recommendUrl, getHeader())), extend);
     }
 
     @Override
@@ -142,8 +117,14 @@ public class DOUBAN extends Spider {
         }
 
         String cateUrl;
-        if (Objects.equals(tid, "TOP250")) {
-            cateUrl = siteUrl + "/subject_collection/movie_top250/items" + apikey
+        if (Objects.equals(tid, "rating")) {
+            String area = extend.get("area");
+            if (!TextUtils.isEmpty(area) && !"全部".equals(area)) {
+                defaultType = area;
+            }
+            cateUrl = siteUrl + "/subject/recent_hot/movie" + apikey
+                    + "&category=%E8%B1%86%E7%93%A3%E9%AB%98%E5%88%86"
+                    + "&type=" + URLEncoder.encode(defaultType, "UTF-8")
                     + "&start=" + start + "&count=" + PAGE_SIZE;
         } else if (Objects.equals(tid, "obscure")) {
             String area = extend.get("area");
@@ -159,61 +140,94 @@ public class DOUBAN extends Spider {
                     + "&tags=" + URLEncoder.encode(tags.toString(), "UTF-8")
                     + "&start=" + start + "&count=" + PAGE_SIZE;
         }
-        JsonObject object = JsonParser.parseString(OkHttp.string(cateUrl, getHeader())).getAsJsonObject();
-        JsonArray array = Objects.equals(tid, "TOP250") ? object.getAsJsonArray("subject_collection_items") : object.getAsJsonArray("items");
-        List<Vod> list = parseVodListFromJsonArray(array);
+        List<Vod> list = parseVods(OkHttp.string(cateUrl, getHeader()));
 
         int page = Integer.parseInt(pg);
         return Result.string(page, 0, PAGE_SIZE, 0, list);
     }
 
-    private List<Vod> parseVodListFromJsonArray(JsonArray items) throws Exception {
+    private List<Vod> parseVods(String json) {
         List<Vod> list = new ArrayList<>();
-        for (JsonElement element : items) {
-            JsonObject item = element.getAsJsonObject();
-            String vodId = "msearch:" + getString(item, "id");
-            String name = getString(item, "title");
-            if (name.contains("高分经典") || name.contains("评分最高")) continue;
-            String pic = getPic(item);
-            String remark = getRating(item);
-            list.add(new Vod(vodId, name, pic, remark));
+        try {
+            JsonReader reader = new JsonReader(new StringReader(json));
+            reader.beginObject();
+            while (reader.hasNext()) {
+                if (!"items".equals(reader.nextName())) {
+                    reader.skipValue();
+                    continue;
+                }
+                reader.beginArray();
+                while (reader.hasNext()) {
+                    Vod vod = readVod(reader);
+                    if (vod != null) list.add(vod);
+                }
+                reader.endArray();
+                reader.close();
+                return list;
+            }
+            reader.close();
+        } catch (Exception e) {
+            // ignore
         }
         return list;
     }
 
-    private String getString(JsonObject obj, String key) {
-        JsonElement el = obj.get(key);
-        return el == null ? "" : el.getAsString();
+    private Vod readVod(JsonReader reader) throws java.io.IOException {
+        reader.beginObject();
+        String id = "", title = "", pic = "", rating = "";
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+            switch (name) {
+                case "id":
+                    id = readValue(reader);
+                    break;
+                case "title":
+                    title = readValue(reader);
+                    break;
+                case "pic":
+                    pic = readNested(reader, "normal");
+                    break;
+                case "rating":
+                    rating = readNested(reader, "value");
+                    break;
+                default:
+                    reader.skipValue();
+            }
+        }
+        reader.endObject();
+        if (title.isEmpty()) return null;
+        if (title.contains("高分经典") || title.contains("评分最高")) return null;
+        String picUrl = pic.isEmpty()
+                ? BaseUtil.ALIVIDEO
+                : pic + "@Referer=https://api.douban.com/@User-Agent=" + BaseUtil.CHROME;
+        String remark = rating.isEmpty() ? "" : "豆瓣" + rating + "分";
+        return new Vod("msearch:" + id, title, picUrl, remark);
     }
 
-    private String getRating(JsonObject item) {
-        try {
-            JsonObject rating = item.getAsJsonObject("rating");
-            if (rating != null) {
-                String value = getString(rating, "value");
-                if (!value.isEmpty()) {
-                    return "豆瓣" + value + "分";
-                }
-            }
-        } catch (Exception e) {
-            // ignore
+    private String readValue(JsonReader reader) throws java.io.IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.skipValue();
+            return "";
         }
-        return "";
+        return reader.nextString();
     }
 
-    private String getPic(JsonObject item) {
-        try {
-            JsonObject pic = item.getAsJsonObject("pic");
-            if (pic != null) {
-                String normal = getString(pic, "normal");
-                if (!normal.isEmpty()) {
-                    return normal + "@Referer=https://api.douban.com/@User-Agent=" + Util.CHROME;
+    private String readNested(JsonReader reader, String key) throws java.io.IOException {
+        String value = "";
+        if (reader.peek() != JsonToken.NULL) {
+            reader.beginObject();
+            while (reader.hasNext()) {
+                if (key.equals(reader.nextName())) {
+                    value = readValue(reader);
+                } else {
+                    reader.skipValue();
                 }
             }
-        } catch (Exception e) {
-            // ignore
+            reader.endObject();
+        } else {
+            reader.skipValue();
         }
-        return ALIVIDEO;
+        return value;
     }
 
 }

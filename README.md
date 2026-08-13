@@ -12,20 +12,20 @@ https://github.com/bizhangjie/CatVodSpider
 
 ### \# TVBox / [EasyBox](https://easybox.pro/download.html) / [MBox](https://github.com/XiaoRanLiu3119/TVBoxOS-Mobile) / 影视仓 / [FongMi影视](https://github.com/FongMi/Release) / 影迷
 
-- **Mobile App** `建议使用EasyBox`
+- **Mobile App** `建议使用EasyBox或FongMi影视`
     - <https://www.lanzoux.com/b00v02s58b> `666`
     - <https://share.feijipan.com/s/lyblrj8s>
 
-|   类型   |                                              原生                                               |                                              加速                                               |
-|:------:|:---------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------:|
-| 影视+直播  |  [下载](https://raw.githubusercontent.com/geoisam/FuckScripts/refs/heads/main/json/index.json)  |  [下载](https://ghfast.top/raw.githubusercontent.com/geoisam/FuckScripts/main/json/index.json)  |
-| 🔞🔞🔞 |  [下载](https://raw.githubusercontent.com/geoisam/FuckScripts/refs/heads/main/json/adult.json)  |  [下载](https://ghfast.top/raw.githubusercontent.com/geoisam/FuckScripts/main/json/adult.json)  |
-| 优选+直播  | [下载](https://raw.githubusercontent.com/geoisam/FuckScripts/refs/heads/main/json/geoisam.json) | [下载](https://ghfast.top/raw.githubusercontent.com/geoisam/FuckScripts/main/json/geoisam.json) |
+| **类型** | **原生** | **加速** |
+|:---:|:---:|:---:|
+| 影视+直播  |  [下载](https://raw.githubusercontent.com/geoisam/FuckScripts/main/json/index.json)  |  [下载](https://gh-proxy.com/raw.githubusercontent.com/geoisam/FuckScripts/main/json/index.json)  |
+| 🔞🔞🔞 |  [下载](https://raw.githubusercontent.com/geoisam/FuckScripts/main/json/adult.json)  |  [下载](https://gh-proxy.com/raw.githubusercontent.com/geoisam/FuckScripts/main/json/adult.json)  |
+| 优选+直播  | [下载](https://raw.githubusercontent.com/geoisam/FuckScripts/main/json/geoisam.json) | [下载](https://gh-proxy.com/raw.githubusercontent.com/geoisam/FuckScripts/main/json/geoisam.json) |
 
 ### \# 影视资源采集
 
-|  **花名**  | **地址**                                                               |                          **备注**                          |
-|:--------:|----------------------------------------------------------------------|:--------------------------------------------------------:|
+| **花名** | **地址** | **备注** |
+|:---:|---|:---:|
 |  **暴风**  | <https://bfzyapi.com/api.php/provide/vod/from/bfzym3u8/>             |                          `插播广告`                          |
 |  **非凡**  | <https://api.ffzyapi.com/api.php/provide/vod/from/ffm3u8/>           |                      `插播广告` `贴片广告`                       |
 |  **如意**  | <https://cj.rycjapi.com/api.php/provide/vod/from/rym3u8/>            |                      `阴险狡诈` `插播广告`                       |
@@ -69,10 +69,10 @@ https://github.com/bizhangjie/CatVodSpider
 <table>
 <tr>
 <td><a>
-<img src="https://raw.githubusercontent.com/geoisam/FuckScripts/refs/heads/main/img/wechat.jpg">
+<img src="https://raw.githubusercontent.com/geoisam/FuckScripts/main/img/wechat.jpg">
 </a></td>
 <td><a>
-<img src="https://raw.githubusercontent.com/geoisam/FuckScripts/refs/heads/main/img/alipay.jpg">
+<img src="https://raw.githubusercontent.com/geoisam/FuckScripts/main/img/alipay.jpg">
 </a></td>
 </tr>
 </table>

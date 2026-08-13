@@ -2,9 +2,8 @@ package com.github.catvod.bean;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 
 public class Class {
@@ -16,10 +15,16 @@ public class Class {
     @SerializedName("type_flag")
     private String typeFlag;
 
+    public Class() {
+    }
+
     public static List<Class> arrayFrom(String str) {
-        Type listType = new TypeToken<List<Class>>() {
-        }.getType();
-        return new Gson().fromJson(str, listType);
+        try {
+            Class[] array = new Gson().fromJson(str, Class[].class);
+            return array == null ? null : Arrays.asList(array);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Class(String typeId) {
@@ -38,6 +43,14 @@ public class Class {
 
     public String getTypeId() {
         return typeId;
+    }
+
+    public String getTypeName() {
+        return typeName;
+    }
+
+    public String getTypeFlag() {
+        return typeFlag;
     }
 
     @Override

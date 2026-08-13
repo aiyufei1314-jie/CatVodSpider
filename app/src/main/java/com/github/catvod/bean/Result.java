@@ -1,19 +1,15 @@
 package com.github.catvod.bean;
 
-import com.github.catvod.utils.Util;
+import com.github.catvod.utils.BaseUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Result {
 
@@ -60,19 +56,15 @@ public class Result {
         return Result.get().classes(classes).vod(list).filters(filters).string();
     }
 
+    public static String string(List<Class> classes, List<Vod> list, String filters) {
+        return Result.get().classes(classes).vod(list).filters(filters).string();
+    }
+
     public static String string(Integer page, Integer pagecount, Integer limit, Integer total, List<Vod> list) {
         return Result.get().page(page, pagecount, limit, total).vod(list).string();
     }
 
-    public static String string(List<Class> classes, List<Vod> list, JsonElement filters) {
-        return Result.get().classes(classes).vod(list).filters(filters).string();
-    }
-
     public static String string(List<Class> classes, LinkedHashMap<String, List<Filter>> filters) {
-        return Result.get().classes(classes).filters(filters).string();
-    }
-
-    public static String string(List<Class> classes, JsonElement filters) {
         return Result.get().classes(classes).filters(filters).string();
     }
 
@@ -84,7 +76,7 @@ public class Result {
         return Result.get().classes(classes).vod(list).string();
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     public static String string(List<?> list) {
         if (list == null || list.isEmpty()) return "";
         if (list.get(0) instanceof Vod) return Result.get().vod((List<Vod>) list).string();
@@ -94,14 +86,6 @@ public class Result {
 
     public static String string(Vod item) {
         return Result.get().vod(item).string();
-    }
-
-    public static String error(String msg) {
-        return Result.get().vod(Collections.emptyList()).msg(msg).string();
-    }
-
-    public static String notify(String msg) {
-        return Result.get().msg(msg).string();
     }
 
     public static Result get() {
@@ -130,17 +114,25 @@ public class Result {
 
     public Result filters(JSONObject object) {
         if (object == null) return this;
-        Type listType = new TypeToken<LinkedHashMap<String, List<Filter>>>() {
-        }.getType();
-        this.filters = new Gson().fromJson(object.toString(), listType);
-        return this;
+        return filters(object.toString());
     }
 
-    public Result filters(JsonElement element) {
-        if (element == null) return this;
-        Type listType = new TypeToken<LinkedHashMap<String, List<Filter>>>() {
-        }.getType();
-        this.filters = new Gson().fromJson(element.toString(), listType);
+    public Result filters(String json) {
+        if (json == null || json.isEmpty()) return this;
+        try {
+            LinkedHashMap<String, List<Filter>> map = new LinkedHashMap<>();
+            JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                List<Filter> list = new ArrayList<>();
+                for (JsonElement element : entry.getValue().getAsJsonArray()) {
+                    list.add(new Gson().fromJson(element, Filter.class));
+                }
+                map.put(entry.getKey(), list);
+            }
+            filters = map;
+        } catch (Exception e) {
+            // ignore
+        }
         return this;
     }
 
@@ -152,7 +144,7 @@ public class Result {
 
     public Result chrome() {
         Map<String, String> header = new HashMap<>();
-        header.put("User-Agent", Util.CHROME);
+        header.put("User-Agent", BaseUtil.CHROME);
         header(header);
         return this;
     }

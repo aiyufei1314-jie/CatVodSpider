@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.gradle.proguard)
 }
+
 
 android {
     namespace = "com.github.catvod"
@@ -16,7 +16,7 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -35,30 +35,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    packaging {
-        jniLibs {
-            keepDebugSymbols += "**/libquickjs-android-wrapper.so"
-        }
-    }
-
 }
 
-proguardDictionaries {
-    dictionaryNames = listOf(
-        "build/class-dictionary",
-        "build/package-dictionary",
-        "build/obfuscation-dictionary"
-    )
-    minLineLength = 1
-    maxLineLength = 3
-    linesCountInDictionary = 100000
-}
 
 dependencies {
     implementation(libs.okhttp3)
-    implementation(libs.js.quickjs)
-    implementation(libs.json.gson)
-    implementation(libs.html.jsoup)
-    implementation(libs.juniversalchardet)
-    implementation(libs.orhanobut.logger)
+    implementation(libs.gson)
+    implementation(libs.jsoup)
+    implementation(libs.quickjs)
+   // implementation(libs.javascriptengine)
 }

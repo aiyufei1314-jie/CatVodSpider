@@ -5,8 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class Init {
 

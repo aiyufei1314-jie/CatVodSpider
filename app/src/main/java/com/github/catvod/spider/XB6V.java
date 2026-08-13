@@ -8,7 +8,7 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.Util;
+import com.github.catvod.utils.BaseUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,20 +26,20 @@ import okhttp3.Response;
 
 public class XB6V extends Spider {
 
-    private final String siteUrl = "https://www.xb6v.org";
+    private final String siteUrl = "https://www.xb6v.com";
     private String nextSearchUrlPrefix;
     private String nextSearchUrlSuffix;
 
     private Map<String, String> getHeader() {
         Map<String, String> header = new HashMap<>();
-        header.put("User-Agent", Util.CHROME);
+        header.put("User-Agent", BaseUtil.CHROME);
         header.put("Referer", siteUrl + "/");
         return header;
     }
 
     private Map<String, String> getDetailHeader() {
         Map<String, String> header = new HashMap<>();
-        header.put("User-Agent", Util.CHROME);
+        header.put("User-Agent", BaseUtil.CHROME);
         return header;
     }
 
@@ -216,7 +216,7 @@ public class XB6V extends Spider {
                     .addEncoded("keyboard", key)
                     .build();
             Request request = new Request.Builder().url(searchUrl)
-                    .addHeader("User-Agent", Util.CHROME)
+                    .addHeader("User-Agent", BaseUtil.CHROME)
                     .addHeader("Origin", siteUrl)
                     .addHeader("Referer", siteUrl + "/")
                     .post(formBody)
@@ -225,7 +225,9 @@ public class XB6V extends Spider {
             String[] split = String.valueOf(response.request().url()).split("\\?searchid=");
             nextSearchUrlPrefix = split[0] + "index.php?page=";
             nextSearchUrlSuffix = "&searchid=" + split[1];
-            return Result.string(parseVodListFromDoc(response.body().string()));
+            List<Vod> list = parseVodListFromDoc(response.body().string());
+            response.close();
+            return Result.string(list);
         } else {
             int page = Integer.parseInt(pg) - 1;
             searchUrl = nextSearchUrlPrefix + page + nextSearchUrlSuffix;

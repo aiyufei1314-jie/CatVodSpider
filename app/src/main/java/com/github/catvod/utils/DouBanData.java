@@ -1,19 +1,21 @@
 package com.github.catvod.utils;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.io.StringWriter;
 
 public class DouBanData {
 
-    public static final JsonObject COMMON_SORT;
-    public static final JsonObject COMMON_YEAR;
-    public static final JsonObject MOVIE_TYPE;
-    public static final JsonObject MOVIE_AREA;
-    public static final JsonObject TV_TYPE;
-    public static final JsonObject TV_AREA;
-    public static final JsonObject TV_FORM;
-    public static final JsonObject SHOW_TYPE;
-    public static final JsonObject OBSCURE_AREA;
+    public static final String COMMON_SORT;
+    public static final String COMMON_YEAR;
+    public static final String MOVIE_TYPE;
+    public static final String MOVIE_AREA;
+    public static final String TV_TYPE;
+    public static final String TV_AREA;
+    public static final String TV_FORM;
+    public static final String SHOW_TYPE;
+    public static final String OBSCURE_AREA;
 
 
     private static final Object[][] SORT_OPTIONS = {
@@ -172,19 +174,26 @@ public class DouBanData {
     };
 
 
-    private static JsonObject createFilter(String key, String name, Object[][] options) {
-        JsonObject filter = new JsonObject();
-        filter.addProperty("key", key);
-        filter.addProperty("name", name);
-        JsonArray valueArray = new JsonArray();
-        for (Object[] opt : options) {
-            JsonObject item = new JsonObject();
-            item.addProperty("n", opt[0].toString());
-            item.addProperty("v", opt[1].toString());
-            valueArray.add(item);
+    private static String createFilter(String key, String name, Object[][] options) {
+        StringWriter writer = new StringWriter();
+        try (JsonWriter json = new JsonWriter(writer)) {
+            json.beginObject();
+            json.name("key").value(key);
+            json.name("name").value(name);
+            json.name("value");
+            json.beginArray();
+            for (Object[] opt : options) {
+                json.beginObject();
+                json.name("n").value(opt[0].toString());
+                json.name("v").value(opt[1].toString());
+                json.endObject();
+            }
+            json.endArray();
+            json.endObject();
+        } catch (IOException e) {
+            // ignore
         }
-        filter.add("value", valueArray);
-        return filter;
+        return writer.toString();
     }
 
 

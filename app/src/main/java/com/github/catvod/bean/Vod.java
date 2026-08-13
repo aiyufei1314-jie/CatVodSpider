@@ -37,8 +37,12 @@ public class Vod {
     private Style style;
 
     public static Vod objectFrom(String str) {
-        Vod item = new Gson().fromJson(str, Vod.class);
-        return item == null ? new Vod() : item;
+        try {
+            Vod item = new Gson().fromJson(str, Vod.class);
+            return item == null ? new Vod() : item;
+        } catch (Exception e) {
+            return new Vod();
+        }
     }
 
     public static Vod action(String action) {
@@ -100,36 +104,72 @@ public class Vod {
         this.typeName = typeName;
     }
 
+    public String getTypeName() {
+        return typeName;
+    }
+
     public void setVodId(String vodId) {
         this.vodId = vodId;
+    }
+
+    public String getVodId() {
+        return vodId;
     }
 
     public void setVodName(String vodName) {
         this.vodName = vodName;
     }
 
+    public String getVodName() {
+        return vodName;
+    }
+
     public void setVodPic(String vodPic) {
         this.vodPic = vodPic;
+    }
+
+    public String getVodPic() {
+        return vodPic;
     }
 
     public void setVodRemarks(String vodRemarks) {
         this.vodRemarks = vodRemarks;
     }
 
+    public String getVodRemarks() {
+        return vodRemarks;
+    }
+
     public void setVodYear(String vodYear) {
         this.vodYear = vodYear;
+    }
+
+    public String getVodYear() {
+        return vodYear;
     }
 
     public void setVodArea(String vodArea) {
         this.vodArea = vodArea;
     }
 
+    public String getVodArea() {
+        return vodArea;
+    }
+
     public void setVodActor(String vodActor) {
         this.vodActor = vodActor;
     }
 
+    public String getVodActor() {
+        return vodActor;
+    }
+
     public void setVodDirector(String vodDirector) {
         this.vodDirector = vodDirector;
+    }
+
+    public String getVodDirector() {
+        return vodDirector;
     }
 
     public void setVodContent(String vodContent) {
@@ -144,6 +184,10 @@ public class Vod {
         this.vodPlayFrom = vodPlayFrom;
     }
 
+    public String getVodPlayFrom() {
+        return vodPlayFrom;
+    }
+
     public void setVodPlayUrl(String vodPlayUrl) {
         this.vodPlayUrl = vodPlayUrl;
     }
@@ -156,12 +200,24 @@ public class Vod {
         this.vodTag = vodTag;
     }
 
+    public String getVodTag() {
+        return vodTag;
+    }
+
     public void setAction(String action) {
         this.action = action;
     }
 
+    public String getAction() {
+        return action;
+    }
+
     public void setStyle(Style style) {
         this.style = style;
+    }
+
+    public Style getStyle() {
+        return style;
     }
 
     public static class Style {
@@ -191,6 +247,9 @@ public class Vod {
             return new Style("list");
         }
 
+        public Style() {
+        }
+
         public Style(String type) {
             this.type = type;
         }
@@ -198,6 +257,14 @@ public class Vod {
         public Style(String type, Float ratio) {
             this.type = type;
             this.ratio = ratio;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public Float getRatio() {
+            return ratio;
         }
     }
 }

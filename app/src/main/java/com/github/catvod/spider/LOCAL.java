@@ -9,18 +9,11 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Sub;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.utils.PublicData;
-import com.github.catvod.utils.Util;
+import com.github.catvod.utils.BaseUtil;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 public class LOCAL extends Spider {
 
@@ -56,7 +49,7 @@ public class LOCAL extends Spider {
         for (File file : files) {
             if (file.getName().startsWith(".")) continue;
             if (file.isDirectory()) folders.add(create(file));
-            else if (Util.isMedia(file.getName())) media.add(create(file));
+            else if (BaseUtil.isMedia(file.getName())) media.add(create(file));
         }
         items.addAll(folders);
         items.addAll(media);
@@ -89,7 +82,7 @@ public class LOCAL extends Spider {
         vod.setTypeName("FongMi");
         vod.setVodId(url);
         vod.setVodName(name);
-        vod.setVodPic(PublicData.VIDEO);
+        vod.setVodPic(BaseUtil.VIDEO);
         vod.setVodPlayFrom("播放");
         vod.setVodPlayUrl(name + "$" + url);
         return vod;
@@ -99,7 +92,7 @@ public class LOCAL extends Spider {
         Vod vod = new Vod();
         vod.setVodId(file.getAbsolutePath());
         vod.setVodName(file.getName());
-        vod.setVodPic(PublicData.getIcon(file.isDirectory()));
+        vod.setVodPic(BaseUtil.getIcon(file.isDirectory()));
         vod.setVodRemarks(format.format(file.lastModified()));
         vod.setVodTag(file.isDirectory() ? "folder" : "file");
         return vod;
@@ -110,9 +103,9 @@ public class LOCAL extends Spider {
         if (file.getParentFile() == null) return Collections.emptyList();
         List<Sub> subs = new ArrayList<>();
         for (File f : Objects.requireNonNull(file.getParentFile().listFiles())) {
-            String ext = Util.getExt(f.getName());
-            if (Util.isSub(ext))
-                subs.add(Sub.create().name(Util.removeExt(f.getName())).ext(ext).url("file://" + f.getAbsolutePath()));
+            String ext = BaseUtil.getExt(f.getName());
+            if (BaseUtil.isSub(ext))
+                subs.add(Sub.create().name(BaseUtil.removeExt(f.getName())).ext(ext).url("file://" + f.getAbsolutePath()));
         }
         return subs;
     }

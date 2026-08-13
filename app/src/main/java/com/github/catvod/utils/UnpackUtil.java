@@ -1,20 +1,68 @@
 package com.github.catvod.utils;
 
-import java.util.HashMap;
+import com.whl.quickjs.wrapper.QuickJSContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.github.catvod.net.OkHttp;
-import com.whl.quickjs.wrapper.QuickJSContext;
-
-import org.json.JSONObject;
-
 public class UnpackUtil {
+    public static String replaceReturnWithLastValue(String expression) {
+        int returnIdx = expression.indexOf("return");
+        if (returnIdx == -1) return expression;
 
-    private static final String DEFAULT_KEY = "48935c0aac8e6fe2";
-    private static final String DEFAULT_IV = "4ba394fe1f027b98";
+        // 找到 return 对应的右大括号 }
+        int braceDepth = 0;
+        int start = returnIdx + 6;
+        int end = -1;
+        for (int i = start; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+            if (c == '{') braceDepth++;
+            else if (c == '}') {
+                if (braceDepth == 0) { end = i; break; }
+                braceDepth--;
+            }
+        }
+        if (end == -1) return expression;
 
-    public static String unpack(String script, Boolean undefined) {
+        String returnBody = expression.substring(start, end);
+
+        // ----- 核心：从右往左找不在字符串里的最后一个冒号 -----
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        int lastColonPos = -1;
+
+        for (int i = returnBody.length() - 1; i >= 0; i--) {
+            char c = returnBody.charAt(i);
+
+            // 处理转义字符（防止 \" 或 \' 被误判为字符串结束）
+            if (i > 0 && returnBody.charAt(i - 1) == '\\') {
+                continue; // 跳过转义字符
+            }
+
+            if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+            } else if (c == '\"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+            } else if (c == ':' && !inSingleQuote && !inDoubleQuote) {
+                lastColonPos = i;
+                break;
+            }
+        }
+
+        if (lastColonPos == -1) return expression; // 没找到冒号
+
+        // 截取最后一部分（去掉可能的分号）
+        String lastPart = returnBody.substring(lastColonPos + 1).trim();
+        if (lastPart.endsWith(";")) {
+            lastPart = lastPart.substring(0, lastPart.length() - 1);
+        }
+
+        // 替换拼接
+        String newSegment = "return " + lastPart;
+        return expression.substring(0, returnIdx) + newSegment + expression.substring(end);
+    }
+
+    public static String unpack(String script) {
+        if (script == null) return null;
         String expression = script;
 
         int evalIndex = expression.indexOf("eval(function");
@@ -22,20 +70,40 @@ public class UnpackUtil {
             expression = expression.substring(evalIndex + 4);
         }
 
-        if (undefined) {
-            Pattern p6 = Pattern.compile("\\)\\s?\\{\\s?return\\s?\\(([^}]*)\\)\\s?\\}");
-            Matcher m6 = p6.matcher(expression);
-            if (m6.find()) {
-                String inner = m6.group(1);
-                int lastColon = inner.lastIndexOf(':');
-                if (lastColon != -1) {
-                    String lastPart = inner.substring(lastColon + 1);
-                    String replacement = "){return(" + lastPart + ")}";
-                    expression = m6.replaceFirst(Matcher.quoteReplacement(replacement));
-                }
-            }
+        String result = evaluate(expression);
+        if (result != null && !result.isEmpty()) {
+            return result;
         }
 
+        result = evaluate(replaceReturnWithLastValue(expression));
+        if (result != null && !result.isEmpty()) {
+            return result;
+        }
+
+        result = evaluate(replaceLegacyReturn(expression));
+        if (result != null && !result.isEmpty()) {
+            return result;
+        }
+
+        return null;
+    }
+
+    private static String replaceLegacyReturn(String expression) {
+        Pattern p6 = Pattern.compile("\\)\\s?\\{\\s?return\\s?\\(([^}]*)\\)\\s?\\}");
+        Matcher m6 = p6.matcher(expression);
+        if (m6.find()) {
+            String inner = m6.group(1);
+            int lastColon = inner.lastIndexOf(':');
+            if (lastColon != -1) {
+                String lastPart = inner.substring(lastColon + 1);
+                String replacement = "){return(" + lastPart + ")}";
+                return m6.replaceFirst(Matcher.quoteReplacement(replacement));
+            }
+        }
+        return expression;
+    }
+
+    private static String evaluate(String expression) {
         QuickJSContext context = null;
         try {
             context = QuickJSContext.create();
@@ -45,72 +113,12 @@ public class UnpackUtil {
             return null;
         } finally {
             if (context != null) {
-                context.destroy();
+                try {
+                    context.destroy();
+                } catch (Exception ignored) {
+                }
             }
         }
-    }
-
-    public static String getPlayerJS(String script) {
-        String realJs = unpack(script, false);
-        if (realJs == null) return "";
-        realJs = realJs.replaceAll("\\\\", "").replaceAll("\\s", "");
-
-        Pattern p6 = Pattern.compile("\\+encodeURIComponent\\(\"(.*?)\"\\)\\+");
-        Matcher m6 = p6.matcher(realJs);
-        if (!m6.find()) return "";
-        String uParam = m6.group(1);
-        uParam = uParam.replace("+", "%2B")
-                .replace("/", "%2F")
-                .replace("=", "%3D");
-
-        Pattern p9 = Pattern.compile("src=\"(.*?)\\?");
-        Matcher m9 = p9.matcher(realJs);
-        if (!m9.find()) return "";
-        String urlPath = m9.group(1);
-
-        return urlPath + "?u=" + uParam;
-    }
-
-    public static String getM3U8Url(String script, String baseUrl) {
-        try {
-            String originBaseUrl = OkHttp.extractBaseUrl(baseUrl);
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("User-Agent", Util.CHROME);
-            headers.put("Origin", originBaseUrl);
-            headers.put("Referer", baseUrl);
-
-            String uParam = getPlayerJS(script);
-            if (uParam.isEmpty()) return "";
-            String detailUrl = originBaseUrl + uParam + "&t=" + System.currentTimeMillis() / 1000 / 1800;
-
-            String m3u8JS = OkHttp.string(detailUrl, headers);
-            if (m3u8JS.isEmpty()) return "";
-
-            String realJs = unpack(m3u8JS, true);
-            if (realJs == null) return "";
-            realJs = realJs.replaceAll("\\\\", "").replaceAll("\\s", "");
-
-            Pattern p6 = Pattern.compile("data-api=\"([^\"]*)\"data-key=\"([^\"]*)\"data-iv=\"([^\"]*)\"");
-            Pattern p9 = Pattern.compile("data-url=\"([^\"]*)\"");
-
-            Matcher m6 = p6.matcher(realJs);
-            if (!m6.find()) {
-                Matcher m9 = p9.matcher(realJs);
-                return m9.find() ? m9.group(1) : "";
-            } else {
-                String apiUrl = originBaseUrl + m6.group(1);
-                JSONObject object = new JSONObject(OkHttp.string(apiUrl, headers));
-                String data6 = object.optString("data");
-                if (data6.isEmpty()) return "";
-                String result = CryptoUtil.aesDecrypt(data6, m6.group(2), m6.group(3), false);
-                return CryptoUtil.base64ToString(result);
-            }
-
-
-        } catch (Exception e) {
-            // ignore
-        }
-        return "";
     }
 
 }
